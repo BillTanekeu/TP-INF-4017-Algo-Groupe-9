@@ -67,9 +67,9 @@
     
     -------- Fonctions implémentées
 
-    -- segment1(T, a, b)                    prend un tableau et retourne une partie de ce dernier a represente l'indice de debut et b la fin      
-    -- segment(L, a, b)                     faire pareil que segment1 mais plutot pour une liste
+    
     -- concate(T, L)                        prend un vecteur T et l'ajoute comme premier element d'une liste L
+    -- DivisionList(L)                      divise une liste en deux parties égales et retourne un élement de type Listx2
     -- Fusion(A, B)                         fusionne deux listes A et B (voir Algo tri fusion)
     -- Trifusion(G)                         trie le graphe qui est une liste (voir algorithme tri fusion)
     -- getMincolor(Adj, dico, maxcolor)     renvoie la couleur d'un noeud (voir algorithme du rapport )
@@ -89,71 +89,51 @@
 using namespace std; // permet d'eviter d'ecrire "std::" devant chaque methode ( ex: std::cout<<;)
 
 
-
-
-
 struct res      // sructure qui contient un dictionnaire et un entier
 {
     map<int, int> Dico;             
     int nb;
 }typedef res;
 
+struct Listx2               // structure qui contient 02 listes
+{
+    list<vector<int>> L1,L2;
+}typedef Listx2;
 
-vector<int> segment1(vector<int> T, int a, int b){   //retourne une partie d'un vecteur
-    vector<int> T1;
 
-    for(int i = a; i< b; i++){              // a c'est le debut et b la fin
-        T1.push_back(T[i]);
+// fontion pouur diviser la liste en 02 dans le tri fusion
+Listx2 DiviserList(list<vector<int>> L){       //retourne les 02 listes 
+    list<vector<int>> L1;                                           // initialisation de la premiere liste retournée
+    
+    list<vector<int>>::iterator temp;                       // definition de 02 pointeurs 
+    list<vector<int>>::iterator it = L.begin();             // celui ci pointe sur la tete de liste
+    
+    int i = 1;
+    int a = L.size()/2;
+    
+    while(i<= a){
+        L1.push_back(*it);                                  // ajouter l'element à la premiere liste
+        temp = it;
+        it++;
+        L.erase(temp);                                      // supprimer de la deuxieme liste
+        i++;    
     }
-
-    return T1;
+    
+    Listx2 result;
+    result.L1 = L1;
+    result.L2 = L;
+    
+    return result;
 }
 
-list<vector<int>> segment(list<vector<int>> L, int a, int b){       //retourne une partie d'une liste
-    list<vector<int>> L1;                                           // initialisation de la liste retournée
-    int i = 0;
-    for(list<vector<int>> :: iterator it = L.begin(); it != L.end(); it++){
-        if(i == b){
-            break;
-        }
-        if(i >= a ){
-            L1.push_back(*it);
-        }
-        i++;
-    }
-    return L1;
-}
-
-/*
-vector<int> concate(int A, vector<int> T){
-    T.insert(T.begin(), A);
-    return T;
-}
-*/
 
 list<vector<int>> concate(vector<int> A, list<vector<int>> L){          // ajoute un vecteur au debut de la liste
     L.push_front(A);
     return L;
 }
 
-/*
-vector<int> Fusion( vector<int> A, vector<int> B){
-    if(A.empty()){
-        return B;
-    }
-    else if(B.empty()){
-        return A;
-    }
-    else if(A[0] >= B[0]){
-        return concate(A[0], Fusion(segment(A, 1, A.size()), B));
-    }
-    else{
-        return concate(B[0], Fusion(A, segment(B, 1, B.size())));
-    }
-
-}
-*/
 list<vector<int>> Fusion( list<vector<int>> A, list<vector<int>> B){   // voir algorithme tri fusion
+    vector<int> temp;
     if(A.empty()){
         return B;
     }
@@ -161,33 +141,28 @@ list<vector<int>> Fusion( list<vector<int>> A, list<vector<int>> B){   // voir a
         return A;
     }
     else if(A.front().size() >= B.front().size()){
-        return concate(A.front(), Fusion(segment(A, 1, A.size()), B));      // concate joue le role de + dans l'algorithme (wikipedia)
+        temp = A.front();                           // recupere le premier element
+        A.pop_front();                              // supprimer le premier elemeent de la liste
+        return concate(temp, Fusion(A, B));      // concate joue le role de + dans l'algorithme (wikipedia)
     }
     else{
-        return concate(B.front(), Fusion(A, segment(B, 1, B.size())));
+        temp = B.front();
+        B.pop_front();
+        return concate(temp, Fusion(A, B));
     }
 
 }
 
 
-/*
-vector<int> TriFusion(vector<int> Tab){
-    int n = Tab.size();
-    if(n <= 1){
-        return Tab;
-    }
-    else{
-       return Fusion(TriFusion(segment(Tab, 0, Tab.size()/2)), TriFusion(segment(Tab, Tab.size()/2, Tab.size())));
-    }
-}
-*/
 list<vector<int>> TriFusion(list<vector<int>> G){                       // voir algorithme tri fusion
     int n = G.size();
+    Listx2 StructList;
     if(n <= 1){
         return G;
     }
     else{
-       return Fusion(TriFusion(segment(G, 0, G.size()/2)), TriFusion(segment(G, G.size()/2, G.size())));
+        StructList = DiviserList(G);                                   // divise la liste en 2
+       return Fusion(TriFusion(StructList.L1), TriFusion(StructList.L2));
     }
 }
 
@@ -244,12 +219,15 @@ res Coloriage(list<vector<int>> G){             // algorithme du cloriage du gra
 
     int nb = 0;                             // nombre de couleurs utilisés pour l'instant
     int col;
+    int num;
     for(vector<int> noeud : G){
-        col = GetMinColor(segment1(noeud, 1, noeud.size()), Dico, MaxColor);
+        num = noeud[0];                                 // numero du noeud
+        noeud.erase(noeud.begin());                                 // supprimer le premier element du tableau on obtient l'adjacence
+        col = GetMinColor(noeud, Dico, MaxColor);
         if(SearchColor(Dico, col) == false){                                               // vérifie si la couleur a déja été utilisée dans le graphe
             nb +=1;                                                                   // incremente nb si c'est une nouvelle couleur
         }
-        Dico[noeud[0]]  = col;                                                  // colorier le noeud courant
+        Dico[num]  = col;                                                  // colorier le noeud courant
     }
 
     res result;
@@ -264,16 +242,8 @@ res Coloriage(list<vector<int>> G){             // algorithme du cloriage du gra
 
 int main(){
 
-
-    map<int, int> dico;
-
-    dico[1] = 1;
-    dico[1] = 4;
-
     
-    list<vector<int>> G = {{1,3,4},{2,4},{3,1,4,5}, {4,1,2,3,6}, {5,3} , {6,4}};        // definition d'un graphe
-    
-   
+    list<vector<int>> G = {{1,2,3,5},{2,1,3},{3,1,2,4,5}, {4,3,5}, {5,1,3,4}};        // definition d'un graphe
     
     res result;
     result = Coloriage(G);

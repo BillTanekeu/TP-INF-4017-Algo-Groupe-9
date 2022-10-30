@@ -32,7 +32,8 @@ struct Turple  {
 Turple Max(vector<vector<Carreau>> Mat){
     Turple max;
     max.pgcb = Mat[0][0].getPgcb();
-
+    max.posX = 1;
+    max.PosY = 1;
     for(int i = 0; i < Mat.size(); i++){
         for(int j = 0; j < Mat[0].size(); j++){
             if(Mat[i][j].getPgcb() > max.pgcb){
@@ -78,7 +79,8 @@ Turple PGCB(vector<vector<Carreau>> Mat){
                     Mat[i][j].setPgcb(1);
                 }
                 else{
-                    Mat[i][j].setPgcb(1 + Min(Mat[i-1][j].getPgcb(), Mat[i][j-1].getPgcb(), Mat[i-1][j-1].getPgcb()));
+                    Mat[i][j].setPgcb(1 + Min(Mat[i-1][j].getPgcb(),
+                                     Mat[i][j-1].getPgcb(), Mat[i-1][j-1].getPgcb()));
                 }
             }
         }
